@@ -1,0 +1,2 @@
+# Bu klasör Git tarafından takip edilmesi için burada.
+# Flask-Migrate, 'flask db init' komutu çalıştırıldığında bu klasörü dolduracak.
