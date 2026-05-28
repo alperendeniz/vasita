@@ -18,16 +18,18 @@ class Config:
     # Güvenlik
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-degistir")
 
+    # Yolu güvenli bir şekilde birleştirip, Windows backslash'lerini düzeltiyoruz
+    db_path = os.path.join(basedir, "instance", "vasita.db").replace('\\', '/')
+
     # Veritabanı
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "DATABASE_URL",
-        "sqlite:///" + os.path.join(basedir, "instance", "vasita.db"),
+        f"sqlite:///{db_path}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # CSRF koruması (Flask-WTF)
     WTF_CSRF_ENABLED = True
-
 
 class DevelopmentConfig(Config):
     """Geliştirme ortamı — DEBUG açık, SQLite."""
