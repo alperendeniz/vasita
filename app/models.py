@@ -154,3 +154,21 @@ class Comment(db.Model):
 
     def __repr__(self) -> str:
         return f"<Comment id={self.id} user_id={self.user_id} complaint_id={self.complaint_id}>"
+
+
+# ---------------------------------------------------------------------------
+# Flask-Login — Oturum kullanıcı yükleyici
+# ---------------------------------------------------------------------------
+
+from app import login_manager  # noqa: E402  (modül düzeyi import; circular-safe)
+
+
+@login_manager.user_loader
+def load_user(user_id: str) -> User | None:
+    """Flask-Login'in her istekte oturumdaki kullanıcıyı yüklemek için çağırdığı fonksiyon.
+
+    ``db.session.get()`` SQLAlchemy 2.x'in birincil anahtar ile
+    tek kayıt çekme yöntemidir (eski ``Query.get()`` kaldırıldı).
+    """
+    return db.session.get(User, int(user_id))
+
