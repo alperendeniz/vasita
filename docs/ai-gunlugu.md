@@ -124,8 +124,56 @@ Faz 2'de tanımlanan modellerin fiziksel SQLite veritabanına dönüştürülmes
 - Hata: `flask db migrate` sırasında SQLite `"unable to open database file"` hatası verdi.
 - Çözüm: Windows dosya sistemindeki ters eğik çizgi (`\`) sorunu ve `.env` dosyasındaki ezici (override) ayarlar nedeniyle göreceli yol çalışmadı. `config.py` içinde `os.path.abspath` kullanılarak mutlak (absolute) yol üretildi ve `.env` içindeki `DATABASE_URL` yorum satırı yapılarak sorun çözüldü.
 
+![Faz 3 Veritabanı Kurulumu](docs/img/oturum-3-db.png)
+
 ### Bu Oturumdan Öğrendiğim
+- Windows dosya sistemi ve Sqlite'ın dosya yolları ile ilgili farklılıklar.
 
 ### Sonraki Oturum İçin Notlar
 - Faz 4: Kimlik Doğrulama (Auth) formları ve route'ları.
+
+---
+
+## Oturum 4 - 28 Mayıs 2026 17:39–18:00
+
+### Hedef
+Flask-WTF ve Flask-Login kullanarak auth blueprint'inin backend altyapısını kurmak.
+
+### Kullandığım Mod ve Model
+- Mod: Plan
+- Model: Claude Sonnet 4.6 (Thinking)
+- Görünüm: Manager
+
+### Verdiğim Promptlar
+1. `app/auth/forms.py` oluştur (RegistrationForm, LoginForm); `app/auth/routes.py` güncelle (register, login, logout); `app/models.py`'ye `user_loader` ekle — önce plan göster, onayımdan sonra uygula.
+2. `routes.py`'de e-posta sanitizasyonu (`strip().lower()`) ve `forms.py`'de `Regexp` ile parola karmaşıklığı doğrulaması ekle.
+
+### Ajanın Önerdiği Plan
+Üç dosyada yapılacak değişiklikler planlandı ve onayımın ardından uygulandı:
+
+| Dosya | İşlem | İçerik |
+|---|---|---|
+| `app/auth/forms.py` | 🆕 Oluşturuldu | `RegistrationForm` (unique validator'lar) + `LoginForm` |
+| `app/auth/routes.py` | ✏️ Güncellendi | `register`, `login`, `logout` view'ları; open redirect koruması |
+| `app/models.py` | ✏️ Güncellendi | `@login_manager.user_loader` + `load_user()` |
+
+![Plan Resmi](docs/img/oturum-4-plan.png)
+
+### Plan'da Sorguladıklarım ve Üretilen Kodda Düzelttiklerim
+- Ajanın ürettiği varsayılan form ve route yapısında güvenlik eksikleri vardı. Kendi inisiyatifimle ajana şu iki "Defense in Depth" kuralını eklettirdim:
+  1. Parola karmaşıklığını artırmak için wtforms `Regexp` kullanıldı.
+  2. Veritabanı tutarlılığı için route tarafında e-posta verisine sanitization (`strip().lower()`) uygulandı.
+
+### Karşılaştığım Hatalar ve Çözümler
+- Hata: Ajan, import doğrulaması için sandbox terminalini kullandı; PowerShell `FileSystem` sürücüsü kısıtı nedeniyle komut başarısız oldu.
+- Çözüm: Doğrulama (`python -c "from app.auth.forms import RegistrationForm, LoginForm; print('Import OK')"`) kendi terminalimde çalıştırıldı. Çıktı `Import OK` olarak döndü.
+
+![Faz 4 Auth Backend ve Güvenlik](docs/img/oturum-4-auth.png)
+
+### Bu Oturumdan Öğrendiğim
+- Girdi Temizleme, Girdi Doğrulama ve Open Redirect koruması (Defense in Depth).
+
+### Sonraki Oturum İçin Notlar
+- Faz 5: Tailwind CSS ile Frontend ve Auth HTML şablonlarının oluşturulması.
+
 
