@@ -98,3 +98,34 @@ Dört model için aşağıdaki tablo ve ilişki yapısı planlandı, onayımın 
 
 ### Sonraki Oturum İçin Notlar
 - Faz 3: Flask-Migrate ile veritabanı fiziksel kurulumu (db init, migrate, upgrade).
+
+---
+
+## Oturum 3 - 28 Mayıs 2026 16:09–16:29
+
+### Hedef
+Faz 2'de tanımlanan modellerin fiziksel SQLite veritabanına dönüştürülmesi. Flask-Migrate ile `db init`, `db migrate` ve `db upgrade` komutlarını çalıştırarak gerçek tablo yapısını oluşturmak.
+
+### Kullandığım Mod ve Model
+- Mod: —
+- Model: Ajan kullanılmadı, terminalden manuel komutlar girildi.
+- Görünüm: —
+
+### Verdiğim Promptlar
+—
+
+### Ajanın Önerdiği Plan
+—
+
+### Plan'da Sorguladıklarım ve Üretilen Kodda Düzelttiklerim
+—
+
+### Karşılaştığım Hatalar ve Çözümler
+- Hata: `flask db migrate` sırasında SQLite `"unable to open database file"` hatası verdi.
+- Çözüm: Windows dosya sistemindeki ters eğik çizgi (`\`) sorunu ve `.env` dosyasındaki ezici (override) ayarlar nedeniyle göreceli yol çalışmadı. `config.py` içinde `os.path.abspath` kullanılarak mutlak (absolute) yol üretildi ve `.env` içindeki `DATABASE_URL` yorum satırı yapılarak sorun çözüldü.
+
+### Bu Oturumdan Öğrendiğim
+
+### Sonraki Oturum İçin Notlar
+- Faz 4: Kimlik Doğrulama (Auth) formları ve route'ları.
+
