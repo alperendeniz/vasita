@@ -2,14 +2,18 @@
 app/main/routes.py — Ana blueprint route'ları
 
 Route'lar:
-    GET  /                              → index()           — Araç listesi
-    GET  /vehicle/<int:id>              → vehicle_detail()  — Araç detayı + şikayetler
+    GET  /                              → index()            — Araç listesi (arama + sayfalama)
+    GET  /vehicle/<int:id>              → vehicle_detail()   — Araç detayı + şikayetler (sayfalama)
     GET  /vehicle/<int:id>/complaint    → create_complaint() — Şikayet ekleme formu
     POST /vehicle/<int:id>/complaint    → create_complaint() — Şikayet kaydet
+
+Hata Yöneticileri:
+    404 — Sayfa / kayıt bulunamadı
+    500 — Sunucu hatası
 """
 
 import sqlalchemy as sa
-from flask import abort, flash, redirect, render_template, url_for
+from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from sqlalchemy.orm import selectinload
 
@@ -20,48 +24,73 @@ from app.models import Complaint, Vehicle
 
 
 # ---------------------------------------------------------------------------
-# Ana Sayfa — Araç Listesi
+# Ana Sayfa — Araç Listesi (arama + sayfalama)
 # ---------------------------------------------------------------------------
 
 @main.route("/")
 def index():
-    """Veritabanındaki tüm araçları şikayet sayılarıyla birlikte listeler.
+    """Araç listesini arama ve sayfalama ile birlikte render eder.
 
-    ``selectinload`` ile N+1 sorgu problemi önlenir: Vehicle listesi tek
-    sorguda çekilir, her aracın ``complaints`` ilişkisi ikinci bir toplu
-    sorguda (SELECT ... WHERE vehicle_id IN (...)) yüklenir.
+    ``q``   — GET parametresi; Vehicle.brand veya Vehicle.model üzerinde
+               büyük/küçük harf duyarsız (ilike) arama yapar.
+    ``page`` — GET parametresi; geçersiz değerde 404 fırlatmak yerine
+               boş sayfa döner (error_out=False).
+    ``selectinload`` N+1 optimizasyonu korunur.
     """
+    q    = request.args.get("q", "").strip()
+    page = request.args.get("page", 1, type=int)
+
     stmt = (
         sa.select(Vehicle)
         .options(selectinload(Vehicle.complaints))
         .order_by(Vehicle.brand, Vehicle.model, Vehicle.year)
     )
-    vehicles = db.session.execute(stmt).scalars().all()
-    return render_template("main/index.html", vehicles=vehicles)
+
+    if q:
+        pattern = f"%{q}%"
+        stmt = stmt.where(
+            sa.or_(
+                Vehicle.brand.ilike(pattern),
+                Vehicle.model.ilike(pattern),
+            )
+        )
+
+    # db.paginate() — Flask-SQLAlchemy 3.x / SQLAlchemy 2.x API
+    # Eski Query.paginate() kullanılmıyor.
+    pagination = db.paginate(stmt, page=page, per_page=9, error_out=False)
+
+    return render_template(
+        "main/index.html",
+        pagination=pagination,
+        vehicles=pagination.items,
+        q=q,
+    )
 
 
 # ---------------------------------------------------------------------------
-# Araç Detayı
+# Araç Detayı (şikayet sayfalama)
 # ---------------------------------------------------------------------------
 
 @main.route("/vehicle/<int:id>")
 def vehicle_detail(id: int):
-    """Seçilen aracın detayını ve o araca ait şikayetleri gösterir."""
+    """Seçilen aracın detayını ve şikayetlerini sayfalama ile gösterir."""
     vehicle = db.session.get(Vehicle, id)
     if vehicle is None:
         abort(404)
 
+    page = request.args.get("page", 1, type=int)
     stmt = (
         sa.select(Complaint)
         .where(Complaint.vehicle_id == id)
         .order_by(Complaint.created_at.desc())
     )
-    complaints = db.session.execute(stmt).scalars().all()
+    pagination = db.paginate(stmt, page=page, per_page=10, error_out=False)
 
     return render_template(
         "main/vehicle_detail.html",
         vehicle=vehicle,
-        complaints=complaints,
+        complaints=pagination.items,
+        pagination=pagination,
     )
 
 
@@ -100,3 +129,19 @@ def create_complaint(id: int):
         vehicle=vehicle,
         form=form,
     )
+
+
+# ---------------------------------------------------------------------------
+# Hata Yöneticileri — uygulama genelinde (app_errorhandler)
+# ---------------------------------------------------------------------------
+
+@main.app_errorhandler(404)
+def not_found(e):
+    """404 — Sayfa veya kayıt bulunamadı."""
+    return render_template("errors/404.html"), 404
+
+
+@main.app_errorhandler(500)
+def server_error(e):
+    """500 — Beklenmedik sunucu hatası."""
+    return render_template("errors/500.html"), 500

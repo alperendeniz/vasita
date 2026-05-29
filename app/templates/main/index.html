@@ -1,21 +1,65 @@
 {% extends "base.html" %}
 
-{% block title %}Araç Kataloğu — Vasıta{% endblock %}
+{% block title %}Araç Kataloğu{% if q %} — "{{ q }}"{% endif %} — Vasıta{% endblock %}
 
 {% block content %}
 
 <!-- Hero -->
-<div class="text-center py-10 mb-8">
+<div class="text-center py-8 mb-6">
   <h1 class="text-4xl font-bold text-slate-800 mb-3">
     <i class="fa-solid fa-car-side text-indigo-500 mr-2"></i>Araç Kataloğu
   </h1>
   <p class="text-slate-500 text-lg max-w-xl mx-auto">
     Aracınızı seçin, diğer kullanıcıların kronik sorun bildirimleri ile karşılaştırın.
   </p>
-  {% if vehicles %}
-    <p class="mt-2 text-sm text-slate-400">
-      <span class="font-semibold text-indigo-500">{{ vehicles | length }}</span> araç listeleniyor
-    </p>
+</div>
+
+<!-- Arama Formu -->
+<div class="max-w-xl mx-auto mb-8">
+  <form method="GET" action="{{ url_for('main.index') }}" role="search">
+    <div class="flex gap-2">
+      <div class="relative flex-1">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
+        <input type="search"
+               name="q"
+               id="search-input"
+               value="{{ q }}"
+               placeholder="Marka veya model ara… (örn: Honda, Corolla)"
+               autocomplete="off"
+               class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                      hover:border-slate-400 transition-colors bg-white" />
+      </div>
+      <button type="submit"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold
+                     px-5 py-2.5 rounded-lg transition-colors shadow-sm focus:outline-none
+                     focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+        Ara
+      </button>
+      {% if q %}
+        <a href="{{ url_for('main.index') }}"
+           class="flex items-center gap-1.5 border border-slate-300 hover:border-slate-400
+                  text-slate-500 hover:text-slate-700 text-sm px-4 py-2.5 rounded-lg transition-colors"
+           title="Aramayı temizle">
+          <i class="fa-solid fa-xmark"></i>
+        </a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Sonuç özeti -->
+<div class="flex items-center justify-between mb-4 px-1">
+  <p class="text-sm text-slate-500">
+    {% if q %}
+      <span class="font-medium text-slate-700">"{{ q }}"</span> için
+      <span class="font-semibold text-indigo-600">{{ pagination.total }}</span> araç bulundu
+    {% else %}
+      Toplam <span class="font-semibold text-indigo-600">{{ pagination.total }}</span> araç listeleniyor
+    {% endif %}
+  </p>
+  {% if pagination.pages > 1 %}
+    <p class="text-sm text-slate-400">Sayfa {{ pagination.page }} / {{ pagination.pages }}</p>
   {% endif %}
 </div>
 
@@ -44,7 +88,7 @@
 
         <!-- Kart gövdesi -->
         <div class="px-6 py-4 flex-1 flex flex-col justify-between gap-4">
-          <div class="flex items-center gap-2">
+          <div>
             {% if complaint_count == 0 %}
               <span class="inline-flex items-center gap-1.5 text-xs text-slate-400 bg-slate-100 px-3 py-1 rounded-full">
                 <i class="fa-solid fa-circle-check text-green-400"></i>
@@ -61,7 +105,6 @@
               </span>
             {% endif %}
           </div>
-
           <div class="flex items-center justify-between">
             <span class="text-sm text-slate-500">Detayları görüntüle</span>
             <i class="fa-solid fa-arrow-right text-indigo-400 group-hover:translate-x-1 transition-transform"></i>
@@ -73,14 +116,91 @@
   </div>
 
 {% else %}
-  <!-- Boş durum -->
-  <div class="text-center py-20">
+  <!-- Arama / boş durum -->
+  <div class="text-center py-20 bg-white rounded-2xl border border-slate-100">
     <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-slate-100 mb-5">
-      <i class="fa-solid fa-car-burst text-slate-400 text-3xl"></i>
+      {% if q %}
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-3xl"></i>
+      {% else %}
+        <i class="fa-solid fa-car-burst text-slate-400 text-3xl"></i>
+      {% endif %}
     </div>
-    <h2 class="text-xl font-semibold text-slate-700 mb-2">Henüz araç eklenmemiş</h2>
-    <p class="text-slate-400 text-sm">Araç kataloğu yakında burada olacak.</p>
+    {% if q %}
+      <h2 class="text-xl font-semibold text-slate-700 mb-2">Sonuç bulunamadı</h2>
+      <p class="text-slate-400 text-sm mb-5">
+        "<span class="font-medium">{{ q }}</span>" için eşleşen araç yok.
+      </p>
+      <a href="{{ url_for('main.index') }}"
+         class="inline-flex items-center gap-2 border border-slate-300 hover:border-indigo-400
+                text-slate-600 hover:text-indigo-600 text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+        <i class="fa-solid fa-xmark"></i>
+        Aramayı temizle
+      </a>
+    {% else %}
+      <h2 class="text-xl font-semibold text-slate-700 mb-2">Henüz araç eklenmemiş</h2>
+      <p class="text-slate-400 text-sm">Araç kataloğu yakında burada olacak.</p>
+    {% endif %}
   </div>
+{% endif %}
+
+<!-- Pagination -->
+{% if pagination.pages > 1 %}
+  <nav class="flex items-center justify-center gap-2 mt-10" aria-label="Sayfalama">
+
+    <!-- Önceki -->
+    {% if pagination.has_prev %}
+      <a href="{{ url_for('main.index', page=pagination.prev_num, q=q) }}"
+         class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600
+                border border-slate-300 rounded-lg hover:border-indigo-400 hover:text-indigo-600
+                transition-colors bg-white">
+        <i class="fa-solid fa-chevron-left text-xs"></i>
+        Önceki
+      </a>
+    {% else %}
+      <span class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-300
+                   border border-slate-200 rounded-lg bg-white cursor-not-allowed">
+        <i class="fa-solid fa-chevron-left text-xs"></i>
+        Önceki
+      </span>
+    {% endif %}
+
+    <!-- Sayfa numaraları -->
+    <div class="flex items-center gap-1">
+      {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+        {% if p %}
+          <a href="{{ url_for('main.index', page=p, q=q) }}"
+             class="w-9 h-9 flex items-center justify-center text-sm rounded-lg border transition-colors
+                    {% if p == pagination.page %}
+                      bg-indigo-600 border-indigo-600 text-white font-semibold
+                    {% else %}
+                      border-slate-300 text-slate-600 hover:border-indigo-400 hover:text-indigo-600 bg-white
+                    {% endif %}">
+            {{ p }}
+          </a>
+        {% else %}
+          <span class="w-9 h-9 flex items-center justify-center text-slate-400 text-sm">…</span>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- Sonraki -->
+    {% if pagination.has_next %}
+      <a href="{{ url_for('main.index', page=pagination.next_num, q=q) }}"
+         class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600
+                border border-slate-300 rounded-lg hover:border-indigo-400 hover:text-indigo-600
+                transition-colors bg-white">
+        Sonraki
+        <i class="fa-solid fa-chevron-right text-xs"></i>
+      </a>
+    {% else %}
+      <span class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-300
+                   border border-slate-200 rounded-lg bg-white cursor-not-allowed">
+        Sonraki
+        <i class="fa-solid fa-chevron-right text-xs"></i>
+      </span>
+    {% endif %}
+
+  </nav>
 {% endif %}
 
 {% endblock %}

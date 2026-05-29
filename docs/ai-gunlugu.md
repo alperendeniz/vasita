@@ -262,6 +262,47 @@ Beş dosyada değişiklik planlandı ve onayımın ardından uygulandı:
 ### Sonraki Oturum İçin Notlar
 - Faz 7: Arama/filtreleme altyapısının, sayfalama (pagination) işlemlerinin ve özel hata sayfalarının (404, 500) oluşturulması.
 
+---
+
+## Oturum 7 - 29 Mayıs 2026 13:51–14:06
+
+### Hedef
+Ana sayfaya arama özelliği eklemek, yüksek veri hacmine karşı araç listesi ve şikayetler için sayfalama (pagination) uygulamak ve özel hata sayfaları (404, 500) tasarlamak.
+
+### Kullandığım Mod ve Model
+- Mod: Plan
+- Model: Claude Sonnet 4.6 (Thinking)
+- Görünüm: Manager
+
+### Verdiğim Promptlar
+1. `index()` rotasına `q` ve `page` GET parametreleri ile `ilike` arama + `db.paginate()` sayfalama ekle; `vehicle_detail()` rotasında şikayet listesine sayfalama ekle; `@main.app_errorhandler` ile 404 ve 500 hata sayfaları oluştur — önce plan göster, onayımdan sonra uygula.
+
+### Ajanın Önerdiği Plan
+Beş dosyada değişiklik planlandı ve onayımın ardından uygulandı:
+
+| Dosya | İşlem | İçerik |
+|---|---|---|
+| `app/main/routes.py` | ✏️ Güncellendi | `ilike` arama, `db.paginate()`, `app_errorhandler(404/500)` |
+| `app/templates/main/index.html` | ✏️ Güncellendi | Arama formu, boş/no-result durumlar, `iter_pages` numaraları, `q` state koruması |
+| `app/templates/main/vehicle_detail.html` | ✏️ Güncellendi | Şikayet listesi altına pagination bileşeni |
+| `app/templates/errors/404.html` | 🆕 Oluşturuldu | Slate gradient, 🔍 ikonu, Geri Git + Ana Sayfaya Dön butonları |
+| `app/templates/errors/500.html` | 🆕 Oluşturuldu | Kırmızı gradient, ⚠️ ikonu, Sayfayı Yenile + Ana Sayfaya Dön butonları |
+
+![Plan Resmi](docs/img/oturum-7-plan.png)
+
+### Plan'da Sorguladıklarım ve Üretilen Kodda Düzelttiklerim
+—
+
+### Karşılaştığım Hatalar ve Çözümler
+- Test aşamasında 500 (Internal Server Error) sayfasının çalışıp çalışmadığını doğrulamak için `routes.py` içerisine kasıtlı olarak `abort(500)` kodu eklenerek sunucu hataya zorlandı. Hata sayfasının başarıyla render edildiği görüldükten sonra kod eski güvenli haline getirildi.
+- Sistem uçtan uca test edildi: arama (`?q=TestMarka`), sayfalama (`?page=2`), arama terimi koruması (`?page=2&q=TestMarka`), 404 rotası (`/olmayan-rota`) ve 500 senaryosu başarıyla doğrulandı.
+
+### Bu Oturumdan Öğrendiğim
+
+### Sonraki Oturum İçin Notlar
+- Faz 8: Projenin genel rubrik kontrolü, eksik kalan özelliklerin (örneğin Admin yetkileri veya Kullanıcı Profili) değerlendirilmesi ve son rötuşlar.
+
+
 
 
 
