@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa — Vasıta{% endblock %}
+
+{% block content %}
+<div class="text-center py-20">
+  <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-indigo-100 mb-6">
+    <i class="fa-solid fa-car-side text-indigo-600 text-4xl"></i>
+  </div>
+  <h1 class="text-4xl font-bold text-slate-800 mb-3">Vasıta'ya Hoş Geldin</h1>
+  <p class="text-slate-500 text-lg max-w-md mx-auto mb-8">
+    Araç sahiplerinin kronik sorunları paylaştığı güvenilir topluluk platformu.
+  </p>
+  {% if not current_user.is_authenticated %}
+    <div class="flex items-center justify-center gap-3">
+      <a href="{{ url_for('auth.register') }}"
+         class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors shadow-sm">
+        Hemen Başla
+      </a>
+      <a href="{{ url_for('auth.login') }}"
+         class="border border-slate-300 hover:border-indigo-400 text-slate-700 hover:text-indigo-600 font-semibold px-6 py-3 rounded-lg transition-colors">
+        Giriş Yap
+      </a>
+    </div>
+  {% else %}
+    <p class="text-slate-600">
+      Hoş geldin, <span class="font-semibold text-indigo-600">{{ current_user.username }}</span>!
+    </p>
+  {% endif %}
+</div>
+{% endblock %}

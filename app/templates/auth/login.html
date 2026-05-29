@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Giriş Yap — Vasıta{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-12rem)] flex items-center justify-center py-8">
+  <div class="w-full max-w-md">
+
+    <!-- Kart -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+
+      <!-- Kart başlığı -->
+      <div class="bg-gradient-to-r from-slate-800 to-indigo-900 px-8 py-7 text-center">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/20 mb-3">
+          <i class="fa-solid fa-key text-white text-2xl"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-white">Tekrar Hoş Geldin</h1>
+        <p class="text-slate-300 text-sm mt-1">Hesabına giriş yap ve deneyimlerini paylaş.</p>
+      </div>
+
+      <!-- Form -->
+      <div class="px-8 py-7">
+        <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+          {{ form.hidden_tag() }}
+
+          <!-- E-posta -->
+          <div class="mb-5">
+            <label for="{{ form.email.id }}" class="block text-sm font-medium text-slate-700 mb-1.5">
+              <i class="fa-solid fa-envelope text-indigo-400 mr-1.5"></i>
+              {{ form.email.label.text }}
+            </label>
+            {{ form.email(
+                id=form.email.id,
+                class_="w-full px-4 py-2.5 border rounded-lg text-sm transition-colors
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                        " + ("border-red-400 bg-red-50" if form.email.errors else "border-slate-300 hover:border-slate-400"),
+                placeholder="ornek@eposta.com"
+            ) }}
+            {% for error in form.email.errors %}
+              <p class="mt-1.5 text-red-500 text-xs flex items-center gap-1">
+                <i class="fa-solid fa-circle-exclamation"></i>{{ error }}
+              </p>
+            {% endfor %}
+          </div>
+
+          <!-- Şifre -->
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-1.5">
+              <label for="{{ form.password.id }}" class="block text-sm font-medium text-slate-700">
+                <i class="fa-solid fa-lock text-indigo-400 mr-1.5"></i>
+                {{ form.password.label.text }}
+              </label>
+              <a href="#" class="text-xs text-indigo-600 hover:text-indigo-800 transition-colors font-medium">
+                Şifremi unuttum
+              </a>
+            </div>
+            <div class="relative">
+              {{ form.password(
+                  id=form.password.id,
+                  class_="w-full px-4 py-2.5 border rounded-lg text-sm pr-10 transition-colors
+                          focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                          " + ("border-red-400 bg-red-50" if form.password.errors else "border-slate-300 hover:border-slate-400"),
+                  placeholder="••••••••"
+              ) }}
+              <button type="button"
+                      onclick="togglePassword('{{ form.password.id }}', this)"
+                      class="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fa-solid fa-eye text-sm"></i>
+              </button>
+            </div>
+            {% for error in form.password.errors %}
+              <p class="mt-1.5 text-red-500 text-xs flex items-center gap-1">
+                <i class="fa-solid fa-circle-exclamation"></i>{{ error }}
+              </p>
+            {% endfor %}
+          </div>
+
+          <!-- Beni Hatırla -->
+          <div class="flex items-center gap-2.5 mb-7">
+            {{ form.remember_me(
+                id=form.remember_me.id,
+                class_="w-4 h-4 rounded border-slate-300 text-indigo-600
+                        focus:ring-indigo-500 cursor-pointer"
+            ) }}
+            <label for="{{ form.remember_me.id }}" class="text-sm text-slate-600 cursor-pointer select-none">
+              {{ form.remember_me.label.text }}
+            </label>
+          </div>
+
+          <!-- Submit -->
+          {{ form.submit(
+              class_="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+                      text-white font-semibold py-2.5 px-4 rounded-lg
+                      transition-colors shadow-sm focus:outline-none
+                      focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer"
+          ) }}
+        </form>
+
+        <!-- Divider -->
+        <div class="relative my-5">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-slate-200"></div>
+          </div>
+          <div class="relative flex justify-center">
+            <span class="bg-white px-3 text-xs text-slate-400">veya</span>
+          </div>
+        </div>
+
+        <!-- Alt link -->
+        <p class="text-center text-sm text-slate-500">
+          Hesabın yok mu?
+          <a href="{{ url_for('auth.register') }}"
+             class="text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+            Ücretsiz kayıt ol
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Güvenlik notu -->
+    <p class="text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-1.5">
+      <i class="fa-solid fa-shield-halved text-green-500"></i>
+      Bağlantınız şifrelenmektedir. Bilgileriniz güvendedir.
+    </p>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  /* Şifre göster/gizle — minimal inline JS */
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon  = btn.querySelector('i');
+    const isHidden = input.type === 'password';
+    input.type   = isHidden ? 'text' : 'password';
+    icon.className = isHidden ? 'fa-solid fa-eye-slash text-sm' : 'fa-solid fa-eye text-sm';
+  }
+</script>
+{% endblock %}

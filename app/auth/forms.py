@@ -43,8 +43,8 @@ class RegistrationForm(FlaskForm):
             DataRequired(message="Şifre zorunludur."),
             Length(min=8, message="Şifre en az 8 karakter olmalıdır."),
             Regexp(
-                r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$',
-                message="Şifreniz en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter (@$!%*?&) içermelidir.",
+                r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.,_+\-]).{8,}$',
+                message="Şifreniz en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter (@$!%*?&.,_+-) içermelidir.",
             ),
         ],
     )

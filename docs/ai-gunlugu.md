@@ -176,4 +176,51 @@ Flask-WTF ve Flask-Login kullanarak auth blueprint'inin backend altyapısını k
 ### Sonraki Oturum İçin Notlar
 - Faz 5: Tailwind CSS ile Frontend ve Auth HTML şablonlarının oluşturulması.
 
+---
+
+## Oturum 5 - 29 Mayıs 2026 11:27–12:16
+
+### Hedef
+Tailwind CSS kullanılarak uygulamanın ana iskeletinin (`base.html`) ve kimlik doğrulama arayüzlerinin (`register.html`, `login.html`) oluşturulması.
+
+### Kullandığım Mod ve Model
+- Mod: Plan
+- Model: Claude Sonnet 4.6 (Thinking)
+- Görünüm: Manager
+
+### Verdiğim Promptlar
+1. `base.html` (Tailwind CDN, FontAwesome, Navbar, Flash mesajları), `auth/register.html` ve `auth/login.html` şablonlarını oluştur — önce plan göster, onayımdan sonra yaz.
+2. `RegistrationForm`'daki `Regexp` kuralını esnet; özel karakter havuzunu genişlet ve kısıtlayıcı son bloğu `.{8,}$` yap.
+
+### Ajanın Önerdiği Plan
+Üç ana şablon ve destekleyici dosyalar oluşturuldu:
+
+| Dosya | İşlem | İçerik |
+|---|---|---|
+| `app/templates/base.html` | 🆕 Oluşturuldu | Tailwind CDN, FontAwesome, sticky Navbar, Flash alert blokları, Footer |
+| `app/templates/auth/register.html` | 🆕 Oluşturuldu | Gradient kart, CSRF `hidden_tag()`, şifre göster/gizle, hata mesajları |
+| `app/templates/auth/login.html` | 🆕 Oluşturuldu | Aynı kart yapısı, Beni Hatırla checkbox, güvenlik notu |
+| `app/templates/main/index.html` | 🆕 Oluşturuldu | `main.index` redirect'lerinin çökmemesi için yer tutucu |
+| `app/main/routes.py` | ✏️ Güncellendi | `index` view fonksiyonu eklendi |
+
+
+### Plan'da Sorguladıklarım ve Üretilen Kodda Düzelttiklerim
+—
+
+### Karşılaştığım Hatalar ve Çözümler
+- **Hata 1 — Veritabanı Tablo Hatası:** İlk testte `sqlite3.OperationalError: no such table: user` hatası alındı. Uygulama bağlamında SQLite tablolarının fiziksel olarak tam oluşmadığı tespit edildi. Terminalde `flask shell` açılarak `db.create_all()` komutuyla tablolar manuel yaratıldı ve sorun çözüldü.
+![Hata 1](docs/img/oturum-5-hata-1.png)
+- **Hata 2 — Bağımlılık (`email_validator`) Hatası:** Form gönderiminde `ModuleNotFoundError` alındı. WTForms `Email` doğrulayıcısının arka plan bağımlılığı olan bu paket `pip install email-validator` komutuyla kurularak doğrulama zinciri onarıldı.
+![Hata 2](docs/img/oturum-5-hata-2.png)
+- **Hata 3 — Aşırı Kısıtlayıcı Regex (Uç Durum Testi):** `Alperen.2026!` gibi güçlü parolalar, varsayılan `Regexp` kuralındaki nokta (`.`) eksikliği nedeniyle reddedildi. Siber güvenlik kullanılabilirlik standartları gereği özel karakter havuzu (`.,_+-`) genişletildi ve kısıtlayıcı kural `.{8,}$` olarak esnetildi.
+![Regexp Düzeltme Sonrası Başarı](docs/img/oturum-5-regexp-basari.png)
+
+### Bu Oturumdan Öğrendiğim
+- Regexp kısıtlamasının ne kadar katı olabileceği ve kullanılabilirlik açısından dengelenmesi gerektiği.
+- Veritabanında 
+
+### Sonraki Oturum İçin Notlar
+- Faz 6: Araç Kataloğu ve Şikayet Sistemi kapsamında `Vehicle` ve `Complaint` modelleri için ana rotaların ve detay sayfalarının oluşturulması.
+
+
 
