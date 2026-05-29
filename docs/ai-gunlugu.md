@@ -205,7 +205,7 @@ Tailwind CSS kullanılarak uygulamanın ana iskeletinin (`base.html`) ve kimlik 
 
 
 ### Plan'da Sorguladıklarım ve Üretilen Kodda Düzelttiklerim
-—
+—Ajanın ürettiği arayüz ve doğrulama kodlarını uçtan uca test ederken üç kritik noktada koda ve ortama doğrudan müdahale etmem gerekti. İlk olarak, kayıt işlemi sırasında alınan "OperationalError" hatasını terminal stack trace üzerinden analiz ederek, SQLite tablolarının Flask uygulama bağlamında (app context) fiziksel olarak oluşmadığını tespit ettim ve flask shell üzerinden db.create_all() ile veritabanını manuel olarak inşa ettim. İkinci olarak, ajanın formda kullandığı Email() doğrulayıcısının arka plan bağımlılığı olan email_validator paketini sanal ortama dahil etmeyi unuttuğunu fark ettim ve paket yönetimini kendim sağladım. Son ve en kritik müdahalemi bir uç durum (edge case) testinde yaptım: "Alperen.2026!" gibi güçlü bir parolanın reddedildiğini gördüğümde, ajanın ürettiği Regexp kuralının nokta (.) gibi işaretleri dışlayarak siber güvenlik 'kullanılabilirlik' (usability) standartlarını ihlal ettiğini belirledim. Ajana komut vererek özel karakter havuzunu (.,_+-) genişlettirdim ve lookahead mantığını koruyarak şifre sonu kısıtlamasını .{8,}$ olarak güncellettirdim.
 
 ### Karşılaştığım Hatalar ve Çözümler
 - **Hata 1 — Veritabanı Tablo Hatası:** İlk testte `sqlite3.OperationalError: no such table: user` hatası alındı. Uygulama bağlamında SQLite tablolarının fiziksel olarak tam oluşmadığı tespit edildi. Terminalde `flask shell` açılarak `db.create_all()` komutuyla tablolar manuel yaratıldı ve sorun çözüldü.
@@ -217,10 +217,51 @@ Tailwind CSS kullanılarak uygulamanın ana iskeletinin (`base.html`) ve kimlik 
 
 ### Bu Oturumdan Öğrendiğim
 - Regexp kısıtlamasının ne kadar katı olabileceği ve kullanılabilirlik açısından dengelenmesi gerektiği.
-- Veritabanında 
 
 ### Sonraki Oturum İçin Notlar
 - Faz 6: Araç Kataloğu ve Şikayet Sistemi kapsamında `Vehicle` ve `Complaint` modelleri için ana rotaların ve detay sayfalarının oluşturulması.
+
+---
+
+## Oturum 6 - 29 Mayıs 2026 13:30–13:46
+
+### Hedef
+Araçların listelendiği ana sayfanın, araç detay sayfasının ve kitle kaynaklı şikayet ekleme sisteminin (`main` blueprint) oluşturulması.
+
+### Kullandığım Mod ve Model
+- Mod: Plan
+- Model: Claude Sonnet 4.6 (Thinking)
+- Görünüm: Manager
+
+### Verdiğim Promptlar
+1. `app/main/forms.py` (ComplaintForm), `app/main/routes.py` (index, vehicle_detail, create_complaint rotaları) ve ilgili HTML şablonlarını oluştur — önce plan göster, onayımdan sonra yaz.
+2. `index()` rotasında `selectinload(Vehicle.complaints)` ile N+1 sorgu optimizasyonu ve `create_complaint()` rotasında `title.strip()` sanitizasyonunu koda dahil et.
+
+### Ajanın Önerdiği Plan
+Beş dosyada değişiklik planlandı ve onayımın ardından uygulandı:
+
+| Dosya | İşlem | İçerik |
+|---|---|---|
+| `app/main/forms.py` | 🆕 Oluşturuldu | `ComplaintForm`: `title` (max 200) + `TextAreaField` |
+| `app/main/routes.py` | ✏️ Güncellendi | 3 route, SQLAlchemy 2.x `select` API, `selectinload`, `title.strip()` |
+| `app/templates/main/index.html` | ✏️ Yeniden Yazıldı | 3-sütun Tailwind Grid, renk kodlu şikayet badge |
+| `app/templates/main/vehicle_detail.html` | 🆕 Oluşturuldu | Gradient başlık, `is_verified` badge, `strftime`, boş durum |
+| `app/templates/main/create_complaint.html` | 🆕 Oluşturuldu | Auth kart stili, `hidden_tag()`, `resize-y` textarea, Vazgeç linki |
+
+![Plan Resmi](docs/img/oturum-6-plan.png)
+
+### Plan'da Sorguladıklarım ve Üretilen Kodda Düzelttiklerim
+- Ajanın başlangıç planında, ana sayfadaki şikayet sayısını hesaplamak için Jinja2 seviyesinde `vehicle.complaints | length` kullanması N+1 SQL sorgusu problemi yaratıyordu. Bu performans açığı tespit edilerek ajana koda müdahale ettirildi ve `selectinload` stratejisiyle eager loading uygulandı.
+- Ayrıca, güvenlik ve veri tutarlılığı için `create_complaint` rotasında formdan gelen başlık verisine `strip()` sanitization işlemi uygulattırıldı.
+
+### Karşılaştığım Hatalar ve Çözümler
+- Hata yok. Seed data (`flask shell` üzerinden Honda Civic, Toyota Corolla, Renault Megane) eklenerek sistem uçtan uca test edildi ve tüm rotalar başarıyla doğrulandı.
+
+### Bu Oturumdan Öğrendiğim
+
+### Sonraki Oturum İçin Notlar
+- Faz 7: Arama/filtreleme altyapısının, sayfalama (pagination) işlemlerinin ve özel hata sayfalarının (404, 500) oluşturulması.
+
 
 
 

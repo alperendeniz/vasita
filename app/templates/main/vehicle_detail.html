@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{{ vehicle.brand }} {{ vehicle.model }} {{ vehicle.year }} — Vasıta{% endblock %}
+
+{% block content %}
+
+<!-- Araç başlığı -->
+<div class="mb-8">
+  <a href="{{ url_for('main.index') }}"
+     class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-indigo-600 transition-colors mb-4">
+    <i class="fa-solid fa-chevron-left text-xs"></i>
+    Tüm Araçlar
+  </a>
+
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <div class="bg-gradient-to-r from-slate-800 to-indigo-900 px-8 py-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-car-side text-white text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-white">
+            {{ vehicle.brand }} {{ vehicle.model }}
+          </h1>
+          <p class="text-slate-400 text-sm mt-0.5">
+            <i class="fa-solid fa-calendar-alt mr-1.5"></i>{{ vehicle.year }} Model
+          </p>
+        </div>
+      </div>
+
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.create_complaint', id=vehicle.id) }}"
+           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700
+                  text-white text-sm font-semibold px-5 py-2.5 rounded-lg
+                  transition-colors shadow-sm self-start sm:self-auto">
+          <i class="fa-solid fa-circle-plus"></i>
+          Şikayet Bildir
+        </a>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}"
+           class="inline-flex items-center gap-2 border border-white/30 hover:bg-white/10
+                  text-white text-sm font-medium px-5 py-2.5 rounded-lg
+                  transition-colors self-start sm:self-auto">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          Şikayet eklemek için giriş yapın
+        </a>
+      {% endif %}
+    </div>
+
+    <!-- Özet istatistik -->
+    <div class="px-8 py-4 border-t border-slate-100 flex items-center gap-2 text-sm text-slate-500">
+      <i class="fa-solid fa-triangle-exclamation text-orange-400"></i>
+      <span>
+        <span class="font-semibold text-slate-700">{{ complaints | length }}</span>
+        şikayet bildirimi
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Şikayet Listesi -->
+<div class="space-y-4">
+  {% if complaints %}
+    <h2 class="text-lg font-semibold text-slate-700 mb-2">
+      <i class="fa-solid fa-list-ul text-indigo-400 mr-2"></i>Bildirilen Şikayetler
+    </h2>
+
+    {% for complaint in complaints %}
+      <div class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow p-6">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+
+          <!-- Başlık + meta -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap mb-2">
+              <h3 class="font-semibold text-slate-800 text-base">{{ complaint.title }}</h3>
+              {% if complaint.is_verified %}
+                <span class="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-100 px-2.5 py-0.5 rounded-full">
+                  <i class="fa-solid fa-circle-check"></i> Doğrulandı
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 text-xs text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                  <i class="fa-solid fa-clock"></i> İncelemede
+                </span>
+              {% endif %}
+            </div>
+
+            <p class="text-slate-600 text-sm leading-relaxed mb-3">{{ complaint.description }}</p>
+
+            <div class="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
+              <span class="flex items-center gap-1">
+                <i class="fa-solid fa-user"></i>
+                {{ complaint.author.username }}
+              </span>
+              <span class="flex items-center gap-1">
+                <i class="fa-solid fa-calendar"></i>
+                {{ complaint.created_at.strftime('%d %b %Y') }}
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    {% endfor %}
+
+  {% else %}
+    <!-- Boş durum -->
+    <div class="text-center py-16 bg-white rounded-2xl border border-slate-100">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-50 mb-4">
+        <i class="fa-solid fa-circle-check text-green-400 text-2xl"></i>
+      </div>
+      <h2 class="text-lg font-semibold text-slate-700 mb-1">Henüz şikayet yok</h2>
+      <p class="text-slate-400 text-sm mb-5">
+        Bu araç için bildirilmiş kronik bir sorun bulunmuyor.
+      </p>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.create_complaint', id=vehicle.id) }}"
+           class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700
+                  text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors">
+          <i class="fa-solid fa-circle-plus"></i>
+          İlk şikayeti sen bildir
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

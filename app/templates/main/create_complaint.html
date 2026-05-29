@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Şikayet Bildir — {{ vehicle.brand }} {{ vehicle.model }} — Vasıta{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-12rem)] flex items-center justify-center py-8">
+  <div class="w-full max-w-lg">
+
+    <!-- Geri linki -->
+    <a href="{{ url_for('main.vehicle_detail', id=vehicle.id) }}"
+       class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-indigo-600 transition-colors mb-5">
+      <i class="fa-solid fa-chevron-left text-xs"></i>
+      {{ vehicle.brand }} {{ vehicle.model }} sayfasına dön
+    </a>
+
+    <!-- Kart -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+
+      <!-- Kart başlığı -->
+      <div class="bg-gradient-to-r from-indigo-700 to-indigo-900 px-8 py-7">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-triangle-exclamation text-white text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-white leading-tight">Şikayet Bildir</h1>
+            <p class="text-indigo-200 text-sm mt-0.5">
+              {{ vehicle.brand }} {{ vehicle.model }} {{ vehicle.year }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="px-8 py-7">
+        <form method="POST"
+              action="{{ url_for('main.create_complaint', id=vehicle.id) }}"
+              novalidate>
+          {{ form.hidden_tag() }}
+
+          <!-- Başlık -->
+          <div class="mb-5">
+            <label for="{{ form.title.id }}"
+                   class="block text-sm font-medium text-slate-700 mb-1.5">
+              <i class="fa-solid fa-heading text-indigo-400 mr-1.5"></i>
+              {{ form.title.label.text }}
+            </label>
+            {{ form.title(
+                id=form.title.id,
+                class_="w-full px-4 py-2.5 border rounded-lg text-sm transition-colors
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                        " + ("border-red-400 bg-red-50" if form.title.errors else "border-slate-300 hover:border-slate-400"),
+                placeholder="Örn: Motor titremesi"
+            ) }}
+            {% for error in form.title.errors %}
+              <p class="mt-1.5 text-red-500 text-xs flex items-center gap-1">
+                <i class="fa-solid fa-circle-exclamation"></i>{{ error }}
+              </p>
+            {% endfor %}
+          </div>
+
+          <!-- Açıklama -->
+          <div class="mb-7">
+            <label for="{{ form.description.id }}"
+                   class="block text-sm font-medium text-slate-700 mb-1.5">
+              <i class="fa-solid fa-align-left text-indigo-400 mr-1.5"></i>
+              {{ form.description.label.text }}
+            </label>
+            {{ form.description(
+                id=form.description.id,
+                class_="w-full px-4 py-2.5 border rounded-lg text-sm transition-colors resize-y
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                        " + ("border-red-400 bg-red-50" if form.description.errors else "border-slate-300 hover:border-slate-400"),
+                rows=5,
+                placeholder="Sorunun ne zaman başladığını, hangi koşullarda ortaya çıktığını ve etkilerini ayrıntılı açıklayın..."
+            ) }}
+            {% for error in form.description.errors %}
+              <p class="mt-1.5 text-red-500 text-xs flex items-center gap-1">
+                <i class="fa-solid fa-circle-exclamation"></i>{{ error }}
+              </p>
+            {% endfor %}
+          </div>
+
+          <!-- Aksiyon butonları -->
+          <div class="flex flex-col sm:flex-row gap-3">
+            {{ form.submit(
+                class_="flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+                        text-white font-semibold py-2.5 px-4 rounded-lg
+                        transition-colors shadow-sm focus:outline-none
+                        focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer"
+            ) }}
+            <a href="{{ url_for('main.vehicle_detail', id=vehicle.id) }}"
+               class="flex-1 text-center border border-slate-300 hover:border-slate-400
+                      text-slate-600 hover:text-slate-800 font-medium py-2.5 px-4
+                      rounded-lg transition-colors text-sm">
+              Vazgeç
+            </a>
+          </div>
+        </form>
+
+        <!-- Bilgi notu -->
+        <p class="text-center text-xs text-slate-400 mt-5 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-indigo-400"></i>
+          Şikayetler moderasyon sonrası onay işaretiyle yayımlanır.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
