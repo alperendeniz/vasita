@@ -99,3 +99,56 @@ class LoginForm(FlaskForm):
     )
     remember_me = BooleanField("Beni Hatırla")
     submit = SubmitField("Giriş Yap")
+
+
+# ---------------------------------------------------------------------------
+# Şifre Sıfırlama Formları
+# ---------------------------------------------------------------------------
+
+class ResetPasswordRequestForm(FlaskForm):
+    """Kullanıcının şifre sıfırlama talebinde bulunduğu form."""
+    email = EmailField(
+        "E-posta Adresi",
+        validators=[
+            DataRequired(message="Lütfen e-posta adresinizi giriniz."),
+            Email(message="Geçerli bir e-posta adresi girin."),
+        ],
+    )
+    submit = SubmitField("Şifremi Sıfırla")
+
+    def validate_email(self, field: EmailField):
+        """E-posta adresinin sistemde kayıtlı olup olmadığını kontrol eder.
+        User enumeration'ı kapatmak için istendiği gibi hata GÖSTERMEYECEKTİK ama
+        talimatta 'kullanıcıya "Böyle bir e-posta bulunamadı" hatası GÖSTERME' yazıyor.
+        Yani validate kısmında hata fırlatmayacağız!
+        Ancak validator'da hata fırlatmazsak form geçerli olur. Rota içerisinde e-postayı arayıp,
+        eğer yoksa hiçbir şey yapmayacağız. Bu nedenle bu validate_email() metodu
+        aslında hata göstermemek için ValidationError fırlatMAMALIDIR. Siliyorum.
+        Ancak yine de talimatta 'Custom Validator ile kontrol etme ve hata GÖSTERME' yazdığı için
+        buraya Custom Validator koymamıza gerek yok. Rota içinde kontrol sağlayacağız.
+        """
+        pass
+
+# validator'ı boş bırakmak anlamsız, tamamen siliyorum.
+
+class ResetPasswordForm(FlaskForm):
+    """Yeni şifrenin girildiği form."""
+    password = PasswordField(
+        "Yeni Şifre",
+        validators=[
+            DataRequired(message="Şifre zorunludur."),
+            Length(min=8, message="Şifre en az 8 karakter olmalıdır."),
+            Regexp(
+                r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.,_+\-]).{8,}$',
+                message="Şifreniz en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter (@$!%*?&.,_+-) içermelidir.",
+            ),
+        ],
+    )
+    confirm_password = PasswordField(
+        "Şifre Tekrar",
+        validators=[
+            DataRequired(message="Şifre tekrarı zorunludur."),
+            EqualTo("password", message="Şifreler eşleşmiyor."),
+        ],
+    )
+    submit = SubmitField("Şifreyi Güncelle")

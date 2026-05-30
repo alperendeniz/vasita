@@ -50,7 +50,7 @@
                 <i class="fa-solid fa-lock text-indigo-400 mr-1.5"></i>
                 {{ form.password.label.text }}
               </label>
-              <a href="#" class="text-xs text-indigo-600 hover:text-indigo-800 transition-colors font-medium">
+              <a href="{{ url_for('auth.reset_password_request') }}" class="text-xs text-indigo-600 hover:text-indigo-800 transition-colors font-medium">
                 Şifremi unuttum
               </a>
             </div>

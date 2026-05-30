@@ -16,7 +16,9 @@ import sqlalchemy as sa
 from datetime import datetime, timezone
 from typing import Optional
 
+from flask import current_app
 from flask_login import UserMixin
+from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -71,6 +73,34 @@ class User(UserMixin, db.Model):
         if self.password_hash is None:
             return False
         return check_password_hash(self.password_hash, password)
+
+    # ------------------------------------------------------------------
+    # Şifre Sıfırlama Token Yönetimi
+    # ------------------------------------------------------------------
+    def get_reset_password_token(self, expires_in=3600) -> str:
+        """Kullanıcı için zaman damgalı güvenli bir şifre sıfırlama token'ı üretir."""
+        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        # Token içine user id'yi koyuyoruz
+        return s.dumps({"reset_password": self.id})
+
+    @staticmethod
+    def verify_reset_password_token(token: str) -> "User | None":
+        """Gelen token'ı doğrular ve geçerliyse ilgili User nesnesini döndürür."""
+        s = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        try:
+            # max_age ile süresini (örn: 1 saat) kontrol ediyoruz
+            data = s.loads(token, max_age=3600)
+        except Exception:
+            return None
+
+        # Data içindeki id'yi alıp DB'den kullanıcıyı çekiyoruz
+        user_id = data.get("reset_password")
+        if not user_id:
+            return None
+
+        return db.session.execute(
+            sa.select(User).where(User.id == user_id)
+        ).scalar_one_or_none()
 
     def __repr__(self) -> str:
         return f"<User id={self.id} username={self.username!r} role={self.role!r}>"

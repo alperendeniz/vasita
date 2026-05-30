@@ -12,12 +12,12 @@ Route'lar:
 from urllib.parse import urlsplit
 
 import sqlalchemy as sa
-from flask import flash, redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, url_for, current_app
 from flask_login import current_user, login_required, login_user, logout_user
 
 from app import db
 from app.auth import auth
-from app.auth.forms import LoginForm, RegistrationForm
+from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm
 from app.models import User
 
 
@@ -98,3 +98,54 @@ def logout():
     logout_user()
     flash("Oturumunuz kapatıldı.", "info")
     return redirect(url_for("main.index"))
+
+
+# ---------------------------------------------------------------------------
+# Şifre Sıfırlama
+# ---------------------------------------------------------------------------
+
+@auth.route("/reset_password_request", methods=["GET", "POST"])
+def reset_password_request():
+    """Kullanıcının şifre sıfırlama e-postası talep ettiği rota."""
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+
+    form = ResetPasswordRequestForm()
+    if form.validate_on_submit():
+        clean_email = form.email.data.strip().lower()
+        stmt = sa.select(User).where(User.email == clean_email)
+        user = db.session.execute(stmt).scalar_one_or_none()
+        
+        # User enumeration saldırısını engellemek için kullanıcı olsa da olmasa da
+        # aynı mesajı veriyoruz. Yalnızca kullanıcı varsa token üretip yolluyoruz.
+        if user:
+            token = user.get_reset_password_token()
+            reset_url = url_for("auth.reset_password", token=token, _external=True)
+            # Terminal tabanlı mock email (Zorla yazdırma)
+            print(f"\n[DİKKAT] SIFIRLAMA LİNKİ: {reset_url}\n", flush=True)
+
+        flash("Eğer e-posta adresiniz sistemimize kayıtlıysa, şifre sıfırlama yönergeleri gönderilmiştir.", "info")
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/reset_password_request.html", title="Şifremi Sıfırla", form=form)
+
+
+@auth.route("/reset_password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    """Gelen token'ı doğrulayıp yeni şifre belirleme sayfasını render eden rota."""
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+
+    user = User.verify_reset_password_token(token)
+    if not user:
+        flash("Geçersiz veya süresi dolmuş bağlantı.", "danger")
+        return redirect(url_for("auth.login"))
+
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        flash("Şifreniz başarıyla güncellendi. Şimdi yeni şifrenizle giriş yapabilirsiniz.", "success")
+        return redirect(url_for("auth.login"))
+
+    return render_template("auth/reset_password.html", title="Yeni Şifre Belirle", form=form)

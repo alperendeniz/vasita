@@ -398,6 +398,26 @@ Stored XSS payload denemeleri (alert scriptleri) Autoescape tarafından zararsı
 ### Sonraki Oturum İçin Notlar
 - Faz 11: Rubrikteki ekstra puan kriteri olan, `itsdangerous` ile zaman damgalı token üreterek e-posta üzerinden güvenli parola sıfırlama akışının entegre edilmesi.
 
+---
+
+## Oturum 11 - 30 Mayıs 2026 14:43–15:25
+
+### Hedef
+`itsdangerous` kullanarak zaman damgalı ve güvenli parola sıfırlama altyapısı kurmak.
+
+### Kullandığım Mod ve Model
+- Mod: Plan
+- Model: Gemini 3.1 Pro (High)
+- Görünüm: Manager
+
+### Mimari ve Güvenlik
+Kötü niyetli kişilerin sistemde kimlerin kayıtlı olduğunu bulmasını (User Enumeration) engellemek için, girilen e-posta veritabanında olmasa bile form aynı başarılı flash mesajını dönecek şekilde tasarlandı. Token imzalama için `URLSafeTimedSerializer` kullanıldı. E-posta SMTP entegrasyonu yerine geliştirme ortamı için Mock Email (terminal print) stratejisi uygulandı.
+
+### Hata Ayıklama (Debugging)
+Flask'ın varsayılan logger'ı `INFO` seviyesindeki çıktıları yuttuğu için sessiz kırılma (Silent Failure) yaşandı. Koda geçici debug sensörleri eklenerek sorun tespit edildi ve logger yerine `flush=True` parametreli güvenli print fonksiyonuna geçilerek çözüldü. Canlıya alma öncesi debug sensörleri temizlendi.
+
+### Sonraki Oturum İçin Notlar
+- Faz 12: JSON formatında dış erişim sağlayacak `/api/v1/` endpoint'leri kurmak.
 
 
 
