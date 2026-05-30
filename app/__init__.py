@@ -46,4 +46,7 @@ def create_app(config_name: str = "default") -> Flask:
     from app.profile import profile as profile_blueprint
     app.register_blueprint(profile_blueprint, url_prefix="/profile")
 
+    from app.admin import admin as admin_blueprint
+    app.register_blueprint(admin_blueprint, url_prefix="/admin")
+
     return app

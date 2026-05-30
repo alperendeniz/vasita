@@ -353,6 +353,29 @@ On iki dosyada değişiklik planlandı ve onayımın ardından uygulandı:
 ### Sonraki Oturum İçin Notlar
 - Faz 9: Rol Tabanlı Erişim Kontrolü (RBAC) kurgulanarak Admin panelinin inşa edilmesi ve fabrika çıkışı araç ekleme yetkisinin sisteme kazandırılması.
 
+---
+
+## Oturum 9 - 30 Mayıs 2026 13:12–13:33
+
+### Model Değişikliği Notu (Kritik)
+Yönergenin 3.1 bölümü 5. maddesine uygun olarak, önceki modelin kullanım kotası dolduğu için projeye Gemini 3.1 Pro (High) modeli ile devam edilmiştir.
+
+### Hedef
+Sisteme Rol Tabanlı Erişim Kontrolü (RBAC) entegre etmek ve yöneticilerin veri akışını (araç ekleme, şikayet onaylama) güvenli bir şekilde yönetebileceği bir kontrol paneli sunmak.
+
+### Kullandığım Mod ve Model
+- Mod: Plan
+- Model: Gemini 3.1 Pro (High)
+- Görünüm: Manager
+
+### Gerçekleştirilen İşlemler
+Dikey yetki yükseltme (Vertical Privilege Escalation) saldırılarını engellemek için `app/decorators.py` içinde `@admin_required` kalkanı oluşturuldu ve `admin` blueprint'i devreye alındı. Dashboard arayüzü, HTML tablo kısıtlamasına uyularak tamamen Tailwind CSS grid ve kart mimarisiyle tasarlandı. Yeni araç ekleme modülüne Faz 8'deki Secure File Upload (UUID, whitelist) güvenlik standartları entegre edildi. Şikayet onaylama mekanizması (`is_verified` toggle) CSRF zafiyetine karşı sadece POST metodu ve `hidden_tag` içeren formlarla çalışacak şekilde sınırlandırıldı.
+
+### Geliştirici Müdahalesi ve Güvenlik Testleri
+Sistemde varsayılan admin bulunmadığı için flask shell üzerinden veritabanına manuel müdahale edilerek mevcut hesaba admin yetkisi tanımlandı. Eski araç kayıtlarının 404 (Not Found) görsel hatasını çözmek için statik dizine `default_car.jpg` fallback (varsayılan) görseli fiziksel olarak eklendi. Araç ekleme POST endpoint'i uçtan uca test edilerek UUID dosya kaydı doğrulandı.
+
+### Sonraki Oturum İçin Notlar
+- Faz 10: Sosyal etkileşim (yorumlar, "Bu sorunu ben de yaşıyorum" upvote sayacı) mekanizmalarının kurulması ve girdi alanlarında XSS (Cross-Site Scripting) / HTML Injection koruma testlerinin yapılması.
 
 
 
