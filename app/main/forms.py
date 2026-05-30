@@ -11,28 +11,50 @@ from wtforms.validators import DataRequired, Length
 
 
 class ComplaintForm(FlaskForm):
-    """Araç şikayeti ekleme formu."""
+    """Kullanıcıların yeni şikayet bildirdiği veya mevcut şikayetini düzenlediği form."""
 
     title = StringField(
-        "Başlık",
+        "Şikayet Başlığı",
         validators=[
-            DataRequired(message="Başlık zorunludur."),
-            Length(max=200, message="Başlık en fazla 200 karakter olabilir."),
+            DataRequired(message="Lütfen bir başlık giriniz."),
+            Length(
+                min=5, max=200, message="Başlık 5 ile 200 karakter arasında olmalıdır."
+            ),
         ],
     )
     description = TextAreaField(
-        "Açıklama",
+        "Şikayet Detayı",
         validators=[
-            DataRequired(message="Açıklama zorunludur."),
+            DataRequired(message="Lütfen şikayetinizin detaylarını açıklayınız."),
+            Length(min=20, message="Açıklama en az 20 karakter olmalıdır."),
         ],
     )
-    submit = SubmitField("Şikayet Bildir")
+    submit = SubmitField("Şikayeti Kaydet")
 
 
 class DeleteForm(FlaskForm):
-    """CSRF korumalı silme formu.
-
-    Alan içermez; yalnızca ``hidden_tag()`` üretmek için kullanılır.
-    Bu sayede şablon içindeki silme ``<form>`` etiketleri CSRF token taşır.
+    """
+    Sadece CSRF koruması sağlamak amacıyla oluşturulmuş boş form.
+    Silme işlemleri POST metodu ile yapılacağı için hidden_tag() üretir.
     """
     pass
+
+
+class ActionForm(FlaskForm):
+    """
+    Buton tıklamaları (örneğin Upvote) için CSRF koruması sağlayan boş form.
+    """
+    pass
+
+
+class CommentForm(FlaskForm):
+    """Şikayetlere yorum yapma formu."""
+
+    body = TextAreaField(
+        "Yorumunuz",
+        validators=[
+            DataRequired(message="Yorum boş bırakılamaz."),
+            Length(max=1000, message="Yorum en fazla 1000 karakter olabilir."),
+        ],
+    )
+    submit = SubmitField("Yorum Yap")

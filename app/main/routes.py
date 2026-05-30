@@ -21,8 +21,8 @@ from sqlalchemy.orm import selectinload
 
 from app import db
 from app.main import main
-from app.main.forms import ComplaintForm, DeleteForm
-from app.models import Complaint, Vehicle
+from app.main.forms import ComplaintForm, DeleteForm, CommentForm, ActionForm
+from app.models import Complaint, Vehicle, Comment, Upvote
 
 
 # ---------------------------------------------------------------------------
@@ -74,9 +74,23 @@ def vehicle_detail(id: int):
     stmt = (
         sa.select(Complaint)
         .where(Complaint.vehicle_id == id)
+        .options(
+            selectinload(Complaint.author),
+            selectinload(Complaint.comments).selectinload(Comment.author),
+            selectinload(Complaint.upvotes)
+        )
         .order_by(Complaint.created_at.desc())
     )
     pagination = db.paginate(stmt, page=page, per_page=10, error_out=False)
+
+    upvoted_complaint_ids = set()
+    if current_user.is_authenticated and pagination.items:
+        c_ids = [c.id for c in pagination.items]
+        stmt_upvotes = sa.select(Upvote.complaint_id).where(
+            Upvote.user_id == current_user.id,
+            Upvote.complaint_id.in_(c_ids)
+        )
+        upvoted_complaint_ids = set(db.session.execute(stmt_upvotes).scalars().all())
 
     return render_template(
         "main/vehicle_detail.html",
@@ -84,6 +98,9 @@ def vehicle_detail(id: int):
         complaints=pagination.items,
         pagination=pagination,
         delete_form=DeleteForm(),
+        comment_form=CommentForm(),
+        action_form=ActionForm(),
+        upvoted_complaint_ids=upvoted_complaint_ids,
     )
 
 
@@ -187,6 +204,71 @@ def delete_complaint(id: int):
     # Kullanıcıyı geldiği sayfaya geri gönder; referrer yoksa profile'a yönlendir
     next_page = request.referrer or url_for("profile.profile_view")
     return redirect(next_page)
+
+
+# ---------------------------------------------------------------------------
+# Sosyal Etkileşim: Yorum ve Upvote
+# ---------------------------------------------------------------------------
+
+@main.route("/complaint/<int:id>/comment", methods=["POST"])
+@login_required
+def comment_complaint(id: int):
+    """Şikayete yorum ekler."""
+    form = CommentForm()
+    if form.validate_on_submit():
+        complaint = db.session.get(Complaint, id)
+        if complaint is None:
+            abort(404)
+
+        comment = Comment(
+            body=form.body.data,
+            user_id=current_user.id,
+            complaint_id=complaint.id
+        )
+        db.session.add(comment)
+        db.session.commit()
+        flash("Yorumunuz eklendi.", "success")
+    else:
+        for _, errors in form.errors.items():
+            for error in errors:
+                flash(error, "danger")
+
+    return redirect(request.referrer or url_for("main.index"))
+
+
+@main.route("/complaint/<int:id>/upvote", methods=["POST"])
+@login_required
+def upvote_complaint(id: int):
+    """Şikayeti upvote eder veya varsa kaldırır."""
+    form = ActionForm()
+    if form.validate_on_submit():
+        complaint = db.session.get(Complaint, id)
+        if complaint is None:
+            abort(404)
+
+        # Kullanıcının bu şikayete upvote'u var mı kontrol et
+        existing_upvote = db.session.execute(
+            sa.select(Upvote).where(
+                Upvote.user_id == current_user.id,
+                Upvote.complaint_id == complaint.id
+            )
+        ).scalar_one_or_none()
+
+        if existing_upvote:
+            # Varsa sil (toggle)
+            db.session.delete(existing_upvote)
+            db.session.commit()
+            flash("Sorun desteğiniz kaldırıldı.", "info")
+        else:
+            # Yoksa ekle
+            new_upvote = Upvote(user_id=current_user.id, complaint_id=complaint.id)
+            db.session.add(new_upvote)
+            db.session.commit()
+            flash("Bu sorunu yaşadığınızı belirttiniz.", "success")
+    else:
+        flash("Geçersiz işlem.", "danger")
+
+    return redirect(request.referrer or url_for("main.index"))
 
 
 # ---------------------------------------------------------------------------

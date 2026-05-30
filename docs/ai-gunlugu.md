@@ -377,6 +377,26 @@ Sistemde varsayılan admin bulunmadığı için flask shell üzerinden veritaban
 ### Sonraki Oturum İçin Notlar
 - Faz 10: Sosyal etkileşim (yorumlar, "Bu sorunu ben de yaşıyorum" upvote sayacı) mekanizmalarının kurulması ve girdi alanlarında XSS (Cross-Site Scripting) / HTML Injection koruma testlerinin yapılması.
 
+---
+
+## Oturum 10 - 30 Mayıs 2026 13:47–14:01
+
+### Hedef
+Sistemdeki şikayetler için yorum ve "Ben de yaşıyorum" (Upvote) mekanizması kurmak, bu girdi noktalarını siber saldırılara karşı sıkılaştırmak.
+
+### Kullandığım Mod ve Model
+- Mod: Plan
+- Model: Gemini 3.1 Pro (High)
+- Görünüm: Manager
+
+### Mimari ve Güvenlik İşlemleri
+Çift oylama (Race Condition ve Spam) saldırılarını veritabanı seviyesinde önlemek için `Upvote` modelinde `user_id` ve `complaint_id` birleşimine `UniqueConstraint` uygulandı. Kullanıcıdan alınan yorum verileri şablonlarda render edilirken `| safe` filtresi KESİNLİKLE KULLANILMAYARAK Jinja2'nin yerleşik Autoescape özelliği aktif tutuldu ve Stored XSS (Kalıcı Çapraz Site Betik) zafiyeti tamamen engellendi. Metin formatının bozulmaması için CSS tabanlı (`whitespace-pre-wrap`) satır sonu koruması uygulandı.
+
+### Testler
+Stored XSS payload denemeleri (alert scriptleri) Autoescape tarafından zararsız HTML entity'lerine dönüştürüldü. Upvote işlemi sonrası UX kaybını önlemek için POST işlemlerinde `request.referrer` tabanlı güvenli geri yönlendirme sağlandı.
+
+### Sonraki Oturum İçin Notlar
+- Faz 11: Rubrikteki ekstra puan kriteri olan, `itsdangerous` ile zaman damgalı token üreterek e-posta üzerinden güvenli parola sıfırlama akışının entegre edilmesi.
 
 
 

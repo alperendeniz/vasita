@@ -54,6 +54,9 @@ class User(UserMixin, db.Model):
     comments: Mapped[list[Comment]] = relationship(
         "Comment", back_populates="author", cascade="all, delete-orphan"
     )
+    upvotes: Mapped[list[Upvote]] = relationship(
+        "Upvote", back_populates="user", cascade="all, delete-orphan"
+    )
 
     # ------------------------------------------------------------------
     # Şifre yönetimi
@@ -127,6 +130,9 @@ class Complaint(db.Model):
     comments: Mapped[list[Comment]] = relationship(
         "Comment", back_populates="complaint", cascade="all, delete-orphan"
     )
+    upvotes: Mapped[list[Upvote]] = relationship(
+        "Upvote", back_populates="complaint", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return (
@@ -145,7 +151,7 @@ class Comment(db.Model):
     __tablename__ = "comment"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    content: Mapped[str] = mapped_column(sa.Text, nullable=False)
+    body: Mapped[str] = mapped_column(sa.Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
@@ -161,6 +167,36 @@ class Comment(db.Model):
 
     def __repr__(self) -> str:
         return f"<Comment id={self.id} user_id={self.user_id} complaint_id={self.complaint_id}>"
+
+
+# ---------------------------------------------------------------------------
+# Upvote — "Ben de yaşıyorum" Desteği
+# ---------------------------------------------------------------------------
+
+class Upvote(db.Model):
+    """Bir kullanıcının bir şikayete verdiği destek oyu."""
+
+    __tablename__ = "upvote"
+    __table_args__ = (
+        sa.UniqueConstraint("user_id", "complaint_id", name="uix_user_complaint_upvote"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    # Yabancı anahtarlar
+    user_id: Mapped[int] = mapped_column(sa.ForeignKey("user.id"), nullable=False, index=True)
+    complaint_id: Mapped[int] = mapped_column(sa.ForeignKey("complaint.id"), nullable=False, index=True)
+
+    # İlişkiler
+    user: Mapped[User] = relationship("User", back_populates="upvotes")
+    complaint: Mapped[Complaint] = relationship("Complaint", back_populates="upvotes")
+
+    def __repr__(self) -> str:
+        return f"<Upvote id={self.id} user_id={self.user_id} complaint_id={self.complaint_id}>"
 
 
 # ---------------------------------------------------------------------------
