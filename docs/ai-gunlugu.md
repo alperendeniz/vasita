@@ -302,6 +302,58 @@ Beş dosyada değişiklik planlandı ve onayımın ardından uygulandı:
 ### Sonraki Oturum İçin Notlar
 - Faz 8: Projenin genel rubrik kontrolü, eksik kalan özelliklerin (örneğin Admin yetkileri veya Kullanıcı Profili) değerlendirilmesi ve son rötuşlar.
 
+---
+
+## Oturum 8 - 29 Mayıs 2026 18:31–23:19
+
+### Hedef
+Kullanıcılara profil düzenleme (Avatar ve Bio) imkânı sunmak ve kendi şikayetlerini güvenli bir şekilde yönetmelerini (CRUD) sağlamak. Canlı veritabanı şema güncellemeleri için Migration altyapısını kurmak.
+
+### Kullandığım Mod ve Model
+- Mod: Plan
+- Model: Claude Sonnet 4.6 (Thinking)
+- Görünüm: Manager
+
+### Verdiğim Promptlar
+1. `User` modeline `bio` ve `avatar_file`, `Vehicle` modeline `image_file` sütunlarını ekle; `profile` blueprint'ini kur; Secure File Upload, IDOR koruma, `DeleteForm` (CSRF) ve `errors/403.html` oluştur.
+2. Yeni sütunlarda `server_default` eksikliği nedeniyle migration hatası alındı; modeller güncellendi ve migration yeniden çalıştırıldı.
+3. Düzenleme formu yeni kayıt oluşturuyor hatasını ve silme sonrası 500 hatasını düzelt; `request.referrer` ile akıllı yönlendirme ekle.
+
+### Ajanın Önerdiği Plan
+On iki dosyada değişiklik planlandı ve onayımın ardından uygulandı:
+
+| Dosya | İşlem | İçerik |
+|---|---|---|
+| `app/models.py` | ✏️ Güncellendi | `bio`, `avatar_file` (server_default), `image_file` (server_default) |
+| `app/main/forms.py` | ✏️ Güncellendi | `DeleteForm` (CSRF-only) |
+| `app/main/routes.py` | ✏️ Güncellendi | `edit_complaint`, `delete_complaint` (IDOR), `403` handler, `vehicle_id` pre-commit, `request.referrer` |
+| `app/__init__.py` | ✏️ Güncellendi | `profile` blueprint kaydı |
+| `app/profile/__init__.py` | 🆕 Oluşturuldu | Blueprint tanımı |
+| `app/profile/forms.py` | 🆕 Oluşturuldu | `EditProfileForm` |
+| `app/profile/routes.py` | 🆕 Oluşturuldu | `profile_view`, `edit_profile` (whitelist + UUID + cleanup) |
+| `app/templates/errors/403.html` | 🆕 Oluşturuldu | Amber gradient, kilit ikonu |
+| `app/templates/profile/profile.html` | 🆕 Oluşturuldu | Avatar, bio, şikayet listesi, Düzenle/Sil |
+| `app/templates/profile/edit_profile.html` | 🆕 Oluşturuldu | `enctype`, avatar önizleme, bio textarea |
+| `app/templates/main/vehicle_detail.html` | ✏️ Güncellendi | Sahip aksiyonları + CSRF `delete_form` |
+| `app/templates/base.html` | ✏️ Güncellendi | Navbar'a Profilim linki |
+| `app/templates/main/create_complaint.html` | ✏️ Güncellendi | `edit_mode` dinamik form action ve başlık |
+
+![Plan Resmi](docs/img/oturum-8-plan.png)
+
+### Plan'da Sorguladıklarım ve Üretilen Kodda Düzelttiklerim
+—
+
+### Karşılaştığım Hatalar ve Çözümler
+- **Hata 1 — SQLite Migration (NOT NULL Constraint):** `flask db upgrade` sırasında mevcut kayıtlara boş değer atanamadığı için `OperationalError: Cannot add a NOT NULL column with default value NULL` alındı. `User.avatar_file` ve `Vehicle.image_file` sütunlarına SQL seviyesinde varsayılan değer atayan `server_default` parametresi eklenerek sorun çözüldü.
+- **Hata 2 — Business Logic (Düzenleme Yeni Kayıt Oluşturuyordu):** `create_complaint.html` şablonundaki `<form action>` her zaman `create_complaint` rotasına POST atıyordu. `edit_mode` değişkeni üzerinden `edit_complaint` rotasına yönlendirmesi için dinamikleştirildi; route'ta `complaint_id` şablona geçirildi.
+- **Hata 3 — Silme İşlemi 500 Hatası ve UX Eksikliği:** `db.session.delete(complaint)` ve `commit()` sonrası `complaint.vehicle_id` erişimi 500 üretti. `vehicle_id` commit öncesinde ayrı bir değişkene alındı. Yönlendirme `request.referrer or url_for("profile.profile_view")` ile dinamik hale getirildi.
+
+### Bu Oturumdan Öğrendiğim
+
+### Sonraki Oturum İçin Notlar
+- Faz 9: Rol Tabanlı Erişim Kontrolü (RBAC) kurgulanarak Admin panelinin inşa edilmesi ve fabrika çıkışı araç ekleme yetkisinin sisteme kazandırılması.
+
+
 
 
 

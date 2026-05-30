@@ -57,10 +57,11 @@
               Şikayet Bildir
             </a>
             <span class="text-slate-600">|</span>
-            <span class="flex items-center gap-2 text-slate-400 text-sm">
+            <a href="{{ url_for('profile.profile_view') }}"
+               class="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-medium px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
               <i class="fa-solid fa-user-circle text-indigo-400"></i>
               {{ current_user.username }}
-            </span>
+            </a>
             <a href="{{ url_for('auth.logout') }}"
                class="flex items-center gap-2 bg-slate-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
               <i class="fa-solid fa-right-from-bracket"></i>
@@ -97,6 +98,11 @@
             <i class="fa-solid fa-user-circle text-indigo-400"></i>
             {{ current_user.username }}
           </div>
+          <a href="{{ url_for('profile.profile_view') }}"
+             class="flex items-center gap-2 text-slate-300 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
+            <i class="fa-solid fa-id-card"></i>
+            Profilim
+          </a>
           <a href="#"
              class="flex items-center gap-2 text-slate-300 hover:text-white text-sm px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors">
             <i class="fa-solid fa-circle-exclamation"></i>

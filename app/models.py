@@ -42,6 +42,10 @@ class User(UserMixin, db.Model):
     # OAuth gibi şifresiz girişlere olanak tanımak için nullable bırakıldı.
     password_hash: Mapped[Optional[str]] = mapped_column(sa.String(256))
     role: Mapped[str] = mapped_column(sa.String(20), nullable=False, default="user")
+    bio: Mapped[Optional[str]] = mapped_column(sa.String(300))
+    avatar_file: Mapped[str] = mapped_column(
+        sa.String(120), nullable=False, default="default.jpg", server_default="default.jpg"
+    )
 
     # İlişkiler — çift yönlü (back_populates)
     complaints: Mapped[list[Complaint]] = relationship(
@@ -82,6 +86,9 @@ class Vehicle(db.Model):
     brand: Mapped[str] = mapped_column(sa.String(80), nullable=False)
     model: Mapped[str] = mapped_column(sa.String(80), nullable=False)
     year: Mapped[int] = mapped_column(nullable=False)
+    image_file: Mapped[str] = mapped_column(
+        sa.String(120), nullable=False, default="default_car.jpg", server_default="default_car.jpg"
+    )
 
     # İlişkiler
     complaints: Mapped[list[Complaint]] = relationship(

@@ -2,14 +2,16 @@
 app/main/routes.py — Ana blueprint route'ları
 
 Route'lar:
-    GET  /                              → index()            — Araç listesi (arama + sayfalama)
-    GET  /vehicle/<int:id>              → vehicle_detail()   — Araç detayı + şikayetler (sayfalama)
-    GET  /vehicle/<int:id>/complaint    → create_complaint() — Şikayet ekleme formu
-    POST /vehicle/<int:id>/complaint    → create_complaint() — Şikayet kaydet
+    GET  /                              → index()             — Araç listesi (arama + sayfalama)
+    GET  /vehicle/<int:id>              → vehicle_detail()    — Araç detayı + şikayetler (sayfalama)
+    GET  /vehicle/<int:id>/complaint    → create_complaint()  — Şikayet ekleme formu
+    POST /vehicle/<int:id>/complaint    → create_complaint()  — Şikayet kaydet
+    GET  /complaint/<int:id>/edit       → edit_complaint()    — Şikayet düzenleme (IDOR korumalı)
+    POST /complaint/<int:id>/edit       → edit_complaint()    — Şikayet güncelle
+    POST /complaint/<int:id>/delete     → delete_complaint()  — Şikayet sil (IDOR korumalı)
 
 Hata Yöneticileri:
-    404 — Sayfa / kayıt bulunamadı
-    500 — Sunucu hatası
+    403, 404, 500
 """
 
 import sqlalchemy as sa
@@ -19,7 +21,7 @@ from sqlalchemy.orm import selectinload
 
 from app import db
 from app.main import main
-from app.main.forms import ComplaintForm
+from app.main.forms import ComplaintForm, DeleteForm
 from app.models import Complaint, Vehicle
 
 
@@ -29,14 +31,7 @@ from app.models import Complaint, Vehicle
 
 @main.route("/")
 def index():
-    """Araç listesini arama ve sayfalama ile birlikte render eder.
-
-    ``q``   — GET parametresi; Vehicle.brand veya Vehicle.model üzerinde
-               büyük/küçük harf duyarsız (ilike) arama yapar.
-    ``page`` — GET parametresi; geçersiz değerde 404 fırlatmak yerine
-               boş sayfa döner (error_out=False).
-    ``selectinload`` N+1 optimizasyonu korunur.
-    """
+    """Araç listesini arama ve sayfalama ile birlikte render eder."""
     q    = request.args.get("q", "").strip()
     page = request.args.get("page", 1, type=int)
 
@@ -55,10 +50,7 @@ def index():
             )
         )
 
-    # db.paginate() — Flask-SQLAlchemy 3.x / SQLAlchemy 2.x API
-    # Eski Query.paginate() kullanılmıyor.
     pagination = db.paginate(stmt, page=page, per_page=9, error_out=False)
-
     return render_template(
         "main/index.html",
         pagination=pagination,
@@ -91,6 +83,7 @@ def vehicle_detail(id: int):
         vehicle=vehicle,
         complaints=pagination.items,
         pagination=pagination,
+        delete_form=DeleteForm(),
     )
 
 
@@ -101,11 +94,7 @@ def vehicle_detail(id: int):
 @main.route("/vehicle/<int:id>/complaint", methods=["GET", "POST"])
 @login_required
 def create_complaint(id: int):
-    """Giriş yapmış kullanıcının seçilen araca şikayet eklemesini sağlar.
-
-    title alanına ``strip()`` uygulanarak baş/sondaki boşluklar temizlenir.
-    Başarılı kayıt sonrası araç detay sayfasına yönlendirilir.
-    """
+    """Giriş yapmış kullanıcının seçilen araca şikayet eklemesini sağlar."""
     vehicle = db.session.get(Vehicle, id)
     if vehicle is None:
         abort(404)
@@ -132,8 +121,83 @@ def create_complaint(id: int):
 
 
 # ---------------------------------------------------------------------------
+# Şikayet Düzenle — IDOR Korumalı
+# ---------------------------------------------------------------------------
+
+@main.route("/complaint/<int:id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_complaint(id: int):
+    """Şikayet sahibinin kendi şikayetini düzenlemesini sağlar.
+
+    IDOR Koruması: Şikayet başka bir kullanıcıya aitse 403 döner.
+    """
+    complaint = db.session.get(Complaint, id)
+    if complaint is None:
+        abort(404)
+    # ── IDOR KORUMASI ────────────────────────────────────────────────────────
+    if complaint.user_id != current_user.id:
+        abort(403)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    form = ComplaintForm(obj=complaint)
+
+    if form.validate_on_submit():
+        complaint.title       = form.title.data.strip()
+        complaint.description = form.description.data
+        db.session.commit()
+        flash("Şikayetiniz başarıyla güncellendi.", "success")
+        return redirect(url_for("main.vehicle_detail", id=complaint.vehicle_id))
+
+    return render_template(
+        "main/create_complaint.html",
+        vehicle=complaint.vehicle,
+        form=form,
+        edit_mode=True,
+        complaint_id=complaint.id,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Şikayet Sil — IDOR Korumalı, yalnızca POST
+# ---------------------------------------------------------------------------
+
+@main.route("/complaint/<int:id>/delete", methods=["POST"])
+@login_required
+def delete_complaint(id: int):
+    """Şikayet sahibinin kendi şikayetini silmesini sağlar.
+
+    IDOR Koruması: Şikayet başka bir kullanıcıya aitse 403 döner.
+    Yalnızca POST kabul edilir; GET isteği 405 döner.
+    CSRF koruması: Şablondaki DeleteForm.hidden_tag() ile sağlanır.
+    """
+    complaint = db.session.get(Complaint, id)
+    if complaint is None:
+        abort(404)
+    # ── IDOR KORUMASI ────────────────────────────────────────────────────────
+    if complaint.user_id != current_user.id:
+        abort(403)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    # commit öncesi vehicle_id'yi hafızaya al — silinmiş nesneden erişilemez
+    vehicle_id = complaint.vehicle_id
+    db.session.delete(complaint)
+    db.session.commit()
+    flash("Şikayetiniz silindi.", "info")
+
+    # Kullanıcıyı geldiği sayfaya geri gönder; referrer yoksa profile'a yönlendir
+    next_page = request.referrer or url_for("profile.profile_view")
+    return redirect(next_page)
+
+
+# ---------------------------------------------------------------------------
 # Hata Yöneticileri — uygulama genelinde (app_errorhandler)
 # ---------------------------------------------------------------------------
+
+@main.app_errorhandler(403)
+def forbidden(e):
+    """403 — Yetkisiz erişim."""
+    return render_template("errors/403.html"), 403
+
 
 @main.app_errorhandler(404)
 def not_found(e):

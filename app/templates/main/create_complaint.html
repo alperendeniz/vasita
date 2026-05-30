@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Şikayet Bildir — {{ vehicle.brand }} {{ vehicle.model }} — Vasıta{% endblock %}
+{% block title %}{% if edit_mode %}Şikayet Düzenle{% else %}Şikayet Bildir{% endif %} — {{ vehicle.brand }} {{ vehicle.model }} — Vasıta{% endblock %}
 
 {% block content %}
 <div class="min-h-[calc(100vh-12rem)] flex items-center justify-center py-8">
@@ -23,7 +23,9 @@
             <i class="fa-solid fa-triangle-exclamation text-white text-xl"></i>
           </div>
           <div>
-            <h1 class="text-xl font-bold text-white leading-tight">Şikayet Bildir</h1>
+            <h1 class="text-xl font-bold text-white leading-tight">
+              {% if edit_mode %}Şikayet Düzenle{% else %}Şikayet Bildir{% endif %}
+            </h1>
             <p class="text-indigo-200 text-sm mt-0.5">
               {{ vehicle.brand }} {{ vehicle.model }} {{ vehicle.year }}
             </p>
@@ -34,7 +36,7 @@
       <!-- Form -->
       <div class="px-8 py-7">
         <form method="POST"
-              action="{{ url_for('main.create_complaint', id=vehicle.id) }}"
+              action="{% if edit_mode %}{{ url_for('main.edit_complaint', id=complaint_id) }}{% else %}{{ url_for('main.create_complaint', id=vehicle.id) }}{% endif %}"
               novalidate>
           {{ form.hidden_tag() }}
 
@@ -101,7 +103,11 @@
         <!-- Bilgi notu -->
         <p class="text-center text-xs text-slate-400 mt-5 flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-shield-halved text-indigo-400"></i>
-          Şikayetler moderasyon sonrası onay işaretiyle yayımlanır.
+          {% if edit_mode %}
+            Değişiklikler kaydedildikten sonra aktif olur.
+          {% else %}
+            Şikayetler moderasyon sonrası onay işaretiyle yayımlanır.
+          {% endif %}
         </p>
       </div>
     </div>

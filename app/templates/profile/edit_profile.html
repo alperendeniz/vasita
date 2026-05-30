@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Profili Düzenle — Vasıta{% endblock %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-12rem)] flex items-center justify-center py-8">
+  <div class="w-full max-w-lg">
+
+    <!-- Geri linki -->
+    <a href="{{ url_for('profile.profile_view') }}"
+       class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-indigo-600 transition-colors mb-5">
+      <i class="fa-solid fa-chevron-left text-xs"></i>
+      Profilime Dön
+    </a>
+
+    <!-- Kart -->
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+
+      <!-- Kart başlığı -->
+      <div class="bg-gradient-to-r from-indigo-700 to-slate-900 px-8 py-7 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid fa-pen-to-square text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-white leading-tight">Profili Düzenle</h1>
+          <p class="text-indigo-200 text-sm mt-0.5">{{ current_user.username }}</p>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div class="px-8 py-7">
+        <form method="POST"
+              action="{{ url_for('profile.edit_profile') }}"
+              enctype="multipart/form-data"
+              novalidate>
+          {{ form.hidden_tag() }}
+
+          <!-- Mevcut Avatar Önizleme -->
+          <div class="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <img src="{{ url_for('static', filename='profile_pics/' + current_user.avatar_file) }}"
+                 alt="Mevcut profil fotoğrafı"
+                 class="w-16 h-16 rounded-full object-cover ring-2 ring-indigo-200 flex-shrink-0"
+                 onerror="this.src='https://ui-avatars.com/api/?name={{ current_user.username }}&background=6366f1&color=fff&size=64'">
+            <div>
+              <p class="text-sm font-medium text-slate-700">Mevcut Fotoğraf</p>
+              <p class="text-xs text-slate-400 mt-0.5">{{ current_user.avatar_file }}</p>
+            </div>
+          </div>
+
+          <!-- Avatar Yükleme -->
+          <div class="mb-5">
+            <label for="{{ form.avatar.id }}" class="block text-sm font-medium text-slate-700 mb-1.5">
+              <i class="fa-solid fa-image text-indigo-400 mr-1.5"></i>
+              {{ form.avatar.label.text }}
+            </label>
+            {{ form.avatar(
+                id=form.avatar.id,
+                class_="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm
+                        file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0
+                        file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700
+                        hover:file:bg-indigo-100 transition-colors cursor-pointer",
+                accept=".png,.jpg,.jpeg"
+            ) }}
+            <p class="mt-1.5 text-slate-400 text-xs">
+              <i class="fa-solid fa-shield-halved mr-1"></i>
+              Yalnızca PNG, JPG veya JPEG dosyaları kabul edilir.
+            </p>
+          </div>
+
+          <!-- Bio -->
+          <div class="mb-7">
+            <label for="{{ form.bio.id }}" class="block text-sm font-medium text-slate-700 mb-1.5">
+              <i class="fa-solid fa-align-left text-indigo-400 mr-1.5"></i>
+              {{ form.bio.label.text }}
+            </label>
+            {{ form.bio(
+                id=form.bio.id,
+                class_="w-full px-4 py-2.5 border rounded-lg text-sm transition-colors resize-y
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent
+                        " + ("border-red-400 bg-red-50" if form.bio.errors else "border-slate-300 hover:border-slate-400"),
+                rows=4,
+                placeholder="Kendinizden kısaca bahsedin…"
+            ) }}
+            {% for error in form.bio.errors %}
+              <p class="mt-1.5 text-red-500 text-xs flex items-center gap-1">
+                <i class="fa-solid fa-circle-exclamation"></i>{{ error }}
+              </p>
+            {% endfor %}
+          </div>
+
+          <!-- Aksiyon butonları -->
+          <div class="flex flex-col sm:flex-row gap-3">
+            {{ form.submit(
+                class_="flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+                        text-white font-semibold py-2.5 px-4 rounded-lg
+                        transition-colors shadow-sm focus:outline-none
+                        focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer"
+            ) }}
+            <a href="{{ url_for('profile.profile_view') }}"
+               class="flex-1 text-center border border-slate-300 hover:border-slate-400
+                      text-slate-600 hover:text-slate-800 font-medium py-2.5 px-4
+                      rounded-lg transition-colors text-sm">
+              Vazgeç
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

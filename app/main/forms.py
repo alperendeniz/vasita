@@ -27,3 +27,12 @@ class ComplaintForm(FlaskForm):
         ],
     )
     submit = SubmitField("Şikayet Bildir")
+
+
+class DeleteForm(FlaskForm):
+    """CSRF korumalı silme formu.
+
+    Alan içermez; yalnızca ``hidden_tag()`` üretmek için kullanılır.
+    Bu sayede şablon içindeki silme ``<form>`` etiketleri CSRF token taşır.
+    """
+    pass
