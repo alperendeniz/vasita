@@ -22,10 +22,12 @@ class Config:
     db_path = os.path.join(basedir, "instance", "vasita.db").replace('\\', '/')
 
     # Veritabanı
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL",
-        f"sqlite:///{db_path}"
-    )
+    # Bazı bulut sağlayıcıları eski 'postgres://' ön ekini döndürebilir. SQLAlchemy 'postgresql://' ister.
+    db_url = os.environ.get("DATABASE_URL", f"sqlite:///{db_path}")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+    SQLALCHEMY_DATABASE_URI = db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # CSRF koruması (Flask-WTF)

@@ -440,4 +440,24 @@ SQLAlchemy modellerine nesne yönelimli serileştirme (`to_dict`) metotları ekl
 ### Sonraki Oturum İçin Notlar
 - Faz 13: Projenin bulut sunucuya (PythonAnywhere/Render) canlıya alınması (Deployment).
 
+---
+
+## Oturum 13 - 31 Mayıs 2026 13:34–14:07
+
+### Hedef
+Projenin donanımdan bağımsız çalışabilmesi için `python:3.12-slim` imajıyla `Dockerfile`, PostgreSQL ve Gunicorn destekli `docker-compose.yml` oluşturmak.
+
+### Kullandığım Mod ve Model
+- Mod: Plan
+- Model: Gemini 3.1 Pro (High)
+- Görünüm: Manager
+
+### Mimari ve İzolasyon
+Saldırı yüzeyini (attack surface) daraltmak için minimal imaj kullanıldı. `.dockerignore` ile hassas veri sızıntısı engellendi. Veri kalıcılığı (Data Persistence) için Docker Volume kurgulandı. `flask db init/migrate/upgrade` ile PostgreSQL şeması sıfırdan kuruldu.
+
+### Hata Ayıklama (Debugging)
+Kayıt olma sürecinde WTForms kaynaklı `ModuleNotFoundError: email_validator` hatası tespit edildi. Sorunu kökünden çözmek için kod tabanında statik analiz yapılarak `requirements.txt` dosyası `gunicorn`, `psycopg2-binary` ve tüm eksik bağımlılıkları kapsayacak şekilde üretim (production) standartlarına standardize edildi.
+
+### Sonuç
+Uçtan uca testler başarıyla tamamlandı ve kodlama süreci resmi olarak bitirildi.
 
