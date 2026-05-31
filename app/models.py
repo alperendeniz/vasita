@@ -16,7 +16,7 @@ import sqlalchemy as sa
 from datetime import datetime, timezone
 from typing import Optional
 
-from flask import current_app
+from flask import current_app, url_for
 from flask_login import UserMixin
 from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -124,9 +124,19 @@ class Vehicle(db.Model):
     )
 
     # İlişkiler
-    complaints: Mapped[list[Complaint]] = relationship(
+    complaints: Mapped[list["Complaint"]] = relationship(
         "Complaint", back_populates="vehicle", cascade="all, delete-orphan"
     )
+
+    def to_dict(self) -> dict:
+        """Nesneyi güvenli bir şekilde JSON formatına serileştirir."""
+        return {
+            "id": self.id,
+            "brand": self.brand,
+            "model": self.model,
+            "year": self.year,
+            "image_url": url_for("static", filename="vehicle_pics/" + self.image_file, _external=True)
+        }
 
     def __repr__(self) -> str:
         return f"<Vehicle id={self.id} brand={self.brand!r} model={self.model!r} year={self.year}>"
@@ -163,6 +173,18 @@ class Complaint(db.Model):
     upvotes: Mapped[list[Upvote]] = relationship(
         "Upvote", back_populates="complaint", cascade="all, delete-orphan"
     )
+
+    def to_dict(self) -> dict:
+        """Nesneyi güvenli bir şekilde JSON formatına serileştirir."""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "is_verified": self.is_verified,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "user_id": self.user_id,
+            "vehicle_id": self.vehicle_id
+        }
 
     def __repr__(self) -> str:
         return (

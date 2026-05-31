@@ -49,4 +49,9 @@ def create_app(config_name: str = "default") -> Flask:
     from app.admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint, url_prefix="/admin")
 
+    from app.api import api as api_blueprint
+    # API Rotaları için CSRF korumasını devre dışı bırakıyoruz (Stateless olduğu için)
+    csrf.exempt(api_blueprint)
+    app.register_blueprint(api_blueprint, url_prefix="/api/v1")
+
     return app

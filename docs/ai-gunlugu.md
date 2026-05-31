@@ -419,5 +419,25 @@ Flask'ın varsayılan logger'ı `INFO` seviyesindeki çıktıları yuttuğu içi
 ### Sonraki Oturum İçin Notlar
 - Faz 12: JSON formatında dış erişim sağlayacak `/api/v1/` endpoint'leri kurmak.
 
+---
+
+## Oturum 12 - 31 Mayıs 2026 13:17–13:31
+
+### Hedef
+Dış sistemlerin (mobil uygulamalar vb.) araç ve şikayet verilerine ulaşabilmesi için güvenli, versiyonlanmış (`/api/v1`) bir JSON API katmanı oluşturmak (Yönergedeki +5 Puanlık Bonus).
+
+### Kullandığım Mod ve Model
+- Mod: Plan
+- Model: Gemini 3.1 Pro (High)
+- Görünüm: Manager
+
+### Mimari ve Güvenlik
+SQLAlchemy modellerine nesne yönelimli serileştirme (`to_dict`) metotları eklendi. Dış sistemlerin statik dosyalara erişebilmesi için `_external=True` ile Mutlak (Absolute) URL'ler üretildi. API'ler stateless olduğu için `api` blueprint'i CSRF korumasından muaf tutuldu.
+
+### Performans ve DoS Koruması
+`GET /vehicles` rotasında veritabanı yığın (dump) çekimini ve Uygulama Katmanı DoS saldırılarını engellemek için `db.paginate` ile API seviyesinde sayfalama zorunlu kılındı.
+
+### Sonraki Oturum İçin Notlar
+- Faz 13: Projenin bulut sunucuya (PythonAnywhere/Render) canlıya alınması (Deployment).
 
 
